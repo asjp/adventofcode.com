@@ -12,11 +12,10 @@ type Coord struct {
 	x, y int
 }
 
-func makeLine(x1, y1, x2, y2 int) []Coord {
+func makeLine(x, y, x2, y2 int) []Coord {
 	r := make([]Coord, 0)
-	if x1 <= x2 {
-		if y1 <= y2 {
-			x, y := x1, y1
+	if x <= x2 {
+		if y <= y2 {
 			for {
 				r = append(r, Coord{x, y})
 				if x == x2 && y == y2 {
@@ -30,7 +29,6 @@ func makeLine(x1, y1, x2, y2 int) []Coord {
 				}
 			}
 		} else {
-			x, y := x1, y1
 			for {
 				r = append(r, Coord{x, y})
 				if x == x2 && y == y2 {
@@ -45,8 +43,7 @@ func makeLine(x1, y1, x2, y2 int) []Coord {
 			}
 		}
 	} else {
-		if y1 <= y2 {
-			x, y := x1, y1
+		if y <= y2 {
 			for {
 				r = append(r, Coord{x, y})
 				if x == x2 && y == y2 {
@@ -60,7 +57,6 @@ func makeLine(x1, y1, x2, y2 int) []Coord {
 				}
 			}
 		} else {
-			x, y := x1, y1
 			for {
 				r = append(r, Coord{x, y})
 				if x == x2 && y == y2 {
