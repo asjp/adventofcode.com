@@ -11,34 +11,15 @@ import (
 )
 
 func isLow(height [][]int, x, y int) bool {
-	if lowestAround(height, x, y) < height[y][x] {
-		return false
-	}
-	return true
-}
-
-func lowestAround(height [][]int, x, y int) int {
-	l := height[y][x]
-	for i := -1; i < 2; i++ {
-		for j := -1; j < 2; j++ {
-			x2 := x + i
-			y2 := y + j
-			if x2 < 0 || y2 < 0 || y2 >= len(height) || x2 >= len(height[y2]) {
-				continue
-			}
-			if height[y2][x2] < l {
-				l = height[y2][x2]
-			}
-		}
-	}
-	return l
+	_, _, h := lowestAround(height, x, y)
+	return height[y][x] <= h
 }
 
 type Diff struct {
 	x, y int
 }
 
-func lowestAround2(height [][]int, x, y int) (int, int, int) {
+func lowestAround(height [][]int, x, y int) (int, int, int) {
 	l := height[y][x]
 	lx := x
 	ly := y
@@ -60,7 +41,7 @@ func lowestAround2(height [][]int, x, y int) (int, int, int) {
 }
 
 func lowestFrom(height [][]int, x, y int) (int, int, int) {
-	lx, ly, l := lowestAround2(height, x, y)
+	lx, ly, l := lowestAround(height, x, y)
 	if l < height[y][x] {
 		lx, ly, l = lowestFrom(height, lx, ly)
 	}
@@ -80,16 +61,17 @@ func Calc(r io.ReadSeeker) int {
 		}
 		height = append(height, line)
 	}
-	//fmt.Println(height)
 
 	lowPoints := make(map[string]int)
 	for y, yy := range height {
 		for x, xx := range yy {
-			if isLow(height, x, y) {
+			if xx != 9 && isLow(height, x, y) {
 				lowPoints[fmt.Sprintf("%d,%d", x, y)] = xx
 			}
 		}
 	}
+	//fmt.Println(lowPoints)
+
 	sum := 0
 	for _, h := range lowPoints {
 		sum += (h + 1)
@@ -110,7 +92,6 @@ func Calc2(r io.ReadSeeker) int {
 		}
 		height = append(height, line)
 	}
-	//fmt.Println(height)
 
 	basins := make(map[string]int)
 	for y, yy := range height {
