@@ -6,10 +6,10 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 )
 
 type Cave struct {
-	small       bool
 	connections []string
 }
 
@@ -18,23 +18,11 @@ func isSmall(name string) bool {
 }
 
 func addLink(caves map[string]Cave, from, to string) {
-	var (
-		c  Cave
-		ok bool
-	)
-	if c, ok = caves[from]; !ok {
-		conn := make([]string, 1, 1)
-		conn[0] = to
-		caves[from] = Cave{
-			isSmall(from),
-			conn,
-		}
-	} else {
-		c.connections = append(c.connections, to)
-		caves[from] = Cave{
-			c.small,
-			c.connections,
-		}
+	if _, ok := caves[from]; !ok {
+		caves[from] = Cave{}
+	}
+	caves[from] = Cave{
+		append(caves[from].connections, to),
 	}
 }
 
@@ -46,14 +34,11 @@ func copyMap(from map[string]struct{}) map[string]struct{} {
 	return c
 }
 
-func countPaths(part int, path []string, caves map[string]Cave, smallVisited map[string]struct{}, from string) int {
-	path = append(path, from)
+func CountPaths(part int, caves map[string]Cave, smallVisited map[string]struct{}, from string) int {
 	if from == "end" {
-		//fmt.Println(path)
 		return 1
 	}
-	c := caves[from]
-	if c.small {
+	if isSmall(from) {
 		if _, ok := smallVisited[from]; ok {
 			if part == 1 {
 				return 0
@@ -70,9 +55,7 @@ func countPaths(part int, path []string, caves map[string]Cave, smallVisited map
 			continue
 		}
 		sv := copyMap(smallVisited)
-		p := make([]string, len(path)+1)
-		copy(p, path)
-		paths += countPaths(part, p, caves, sv, l)
+		paths += CountPaths(part, caves, sv, l)
 	}
 	return paths
 }
@@ -91,15 +74,26 @@ func ReadCaves(r io.ReadSeeker) map[string]Cave {
 }
 
 func Part1(r io.ReadSeeker) int {
-	caves := ReadCaves(r)
-	paths := countPaths(1, []string{}, caves, map[string]struct{}{}, "start")
-	return paths
+	defer timeTrack(time.Now())
+	return CountPaths(1, ReadCaves(r), map[string]struct{}{}, "start")
 }
 
 func Part2(r io.ReadSeeker) int {
-	caves := ReadCaves(r)
-	paths := countPaths(2, []string{}, caves, map[string]struct{}{}, "start")
-	return paths
+	defer timeTrack(time.Now())
+	return CountPaths(2, ReadCaves(r), map[string]struct{}{}, "start")
+}
+
+func timeTrack(start time.Time) {
+	fmt.Printf("(%10s) ", time.Since(start))
+}
+
+func expect(expected, actual int, msg string) {
+	if expected == actual {
+		fmt.Printf("\033[1;32mOK\033[0m")
+	} else {
+		fmt.Printf("\033[1;31mFAIL\033[0m (expected %d, actual %d)", expected, actual)
+	}
+	fmt.Println(" ", msg)
 }
 
 func main() {
@@ -149,13 +143,13 @@ start-RW
 		fmt.Println(err)
 	}
 
-	fmt.Println("part1 - test1", Part1(test1))
-	fmt.Println("part1 - test2", Part1(test2))
-	fmt.Println("part1 - test3", Part1(test3))
-	fmt.Println("part1 - puzzle", Part1(input))
+	expect(10, Part1(test1), "Part1 - test1")
+	expect(19, Part1(test2), "Part1 - test2")
+	expect(226, Part1(test3), "Part1 - test3")
+	fmt.Println("Part1 - puzzle", Part1(input))
 
-	fmt.Println("part2 - test1", Part2(test1))
-	fmt.Println("part2 - test2", Part2(test2))
-	fmt.Println("part2 - test3", Part2(test3))
-	fmt.Println("part2 - puzzle", Part2(input))
+	expect(36, Part2(test1), "Part2 - test1")
+	expect(103, Part2(test2), "Part2 - test2")
+	expect(3509, Part2(test3), "Part2 - test3")
+	fmt.Println("Part2 - puzzle", Part2(input))
 }
