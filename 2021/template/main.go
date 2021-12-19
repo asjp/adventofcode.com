@@ -71,5 +71,5 @@ func main() {
 		fmt.Println(err)
 	}
 	fmt.Println("Part1 - puzzle", Part1(input))
-	fmt.Println("Part1 - puzzle", Part1(input))
+	fmt.Println("Part2 - puzzle", Part2(input))
 }
