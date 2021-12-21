@@ -20,7 +20,7 @@ type DistanceMap map[int]BeaconPair
 type Scanner struct {
 	Coord
 	b         []Beacon
-	transform Matrix4x4
+	transform Transform
 	distances DistanceMap
 }
 
@@ -49,27 +49,27 @@ func VectorMagSq(a, b Coord) int {
 func AllRotations() []Matrix3x3 {
 	// 24 orientations
 	return []Matrix3x3{
-		{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}},
+		{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, // 1
 		{{1, 0, 0}, {0, 0, -1}, {0, 1, 0}},
 		{{1, 0, 0}, {0, -1, 0}, {0, 0, -1}},
 		{{1, 0, 0}, {0, 0, 1}, {0, -1, 0}},
-		{{0, -1, 0}, {1, 0, 0}, {0, 0, 1}},
+		{{0, -1, 0}, {1, 0, 0}, {0, 0, 1}}, // 5
 		{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}},
 		{{0, 1, 0}, {1, 0, 0}, {0, 0, -1}},
 		{{0, 0, -1}, {1, 0, 0}, {0, -1, 0}},
-		{{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}},
+		{{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}}, // 9
 		{{-1, 0, 0}, {0, 0, -1}, {0, -1, 0}},
 		{{-1, 0, 0}, {0, 1, 0}, {0, 0, -1}},
 		{{-1, 0, 0}, {0, 0, 1}, {0, 1, 0}},
-		{{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}},
+		{{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}}, // 13
 		{{0, 0, 1}, {-1, 0, 0}, {0, -1, 0}},
 		{{0, -1, 0}, {-1, 0, 0}, {0, 0, -1}},
 		{{0, 0, -1}, {-1, 0, 0}, {0, 1, 0}},
-		{{0, 0, -1}, {0, 1, 0}, {1, 0, 0}},
+		{{0, 0, -1}, {0, 1, 0}, {1, 0, 0}}, // 17
 		{{0, 1, 0}, {0, 0, 1}, {1, 0, 0}},
-		{{0, 0, 1}, {0 - 1, 0}, {1, 0, 0}},
+		{{0, 0, 1}, {0, -1, 0}, {1, 0, 0}},
 		{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}},
-		{{0, 0, -1}, {0, -1, 0}, {-1, 0, 0}},
+		{{0, 0, -1}, {0, -1, 0}, {-1, 0, 0}}, // 21
 		{{0, -1, 0}, {0, 0, 1}, {-1, 0, 0}},
 		{{0, 0, 1}, {0, 1, 0}, {-1, 0, 0}},
 		{{0, 1, 0}, {0, 0, -1}, {-1, 0, 0}},
@@ -96,35 +96,6 @@ func Multiply3x3(a, b Matrix3x3) Matrix3x3 {
 	}
 }
 
-func Multiply4x4(a, b Matrix4x4) Matrix4x4 {
-	return Matrix4x4{
-		{
-			a[0][0]*b[0][0] + a[0][1]*b[1][0] + a[0][2]*b[2][0] + a[0][3]*b[3][0],
-			a[0][0]*b[0][1] + a[0][1]*b[1][1] + a[0][2]*b[2][1] + a[0][3]*b[3][1],
-			a[0][0]*b[0][2] + a[0][1]*b[1][2] + a[0][2]*b[2][2] + a[0][3]*b[3][2],
-			a[0][0]*b[0][3] + a[0][1]*b[1][3] + a[0][2]*b[2][3] + a[0][3]*b[3][3],
-		},
-		{
-			a[1][0]*b[0][0] + a[1][1]*b[1][0] + a[1][2]*b[2][0] + a[1][3]*b[3][0],
-			a[1][0]*b[0][1] + a[1][1]*b[1][1] + a[1][2]*b[2][1] + a[1][3]*b[3][1],
-			a[1][0]*b[0][2] + a[1][1]*b[1][2] + a[1][2]*b[2][2] + a[1][3]*b[3][2],
-			a[1][0]*b[0][3] + a[1][1]*b[1][3] + a[1][2]*b[2][3] + a[1][3]*b[3][3],
-		},
-		{
-			a[2][0]*b[0][0] + a[2][1]*b[1][0] + a[2][2]*b[2][0] + a[2][3]*b[3][0],
-			a[2][0]*b[0][1] + a[2][1]*b[1][1] + a[2][2]*b[2][1] + a[2][3]*b[3][1],
-			a[2][0]*b[0][2] + a[2][1]*b[1][2] + a[2][2]*b[2][2] + a[2][3]*b[3][2],
-			a[2][0]*b[0][3] + a[2][1]*b[1][3] + a[2][2]*b[2][3] + a[2][3]*b[3][3],
-		},
-		{
-			a[3][0]*b[0][0] + a[3][1]*b[1][0] + a[3][2]*b[2][0] + a[3][3]*b[3][0],
-			a[3][0]*b[0][1] + a[3][1]*b[1][1] + a[3][2]*b[2][1] + a[3][3]*b[3][1],
-			a[3][0]*b[0][2] + a[3][1]*b[1][2] + a[3][2]*b[2][2] + a[3][3]*b[3][2],
-			a[3][0]*b[0][3] + a[3][1]*b[1][3] + a[3][2]*b[2][3] + a[3][3]*b[3][3],
-		},
-	}
-}
-
 func RotateCoord(c Coord, m Matrix3x3) Coord {
 	return Coord{
 		c.x*m[0][0] + c.y*m[0][1] + c.z*m[0][2],
@@ -133,33 +104,12 @@ func RotateCoord(c Coord, m Matrix3x3) Coord {
 	}
 }
 
-func TransformCoord(c Coord, m Matrix4x4) Coord {
-	return Coord{
-		c.x*m[0][0] + c.y*m[0][1] + c.z*m[0][2],
-		c.x*m[1][0] + c.y*m[1][1] + c.z*m[1][2],
-		c.x*m[2][0] + c.y*m[2][1] + c.z*m[2][2],
-	}
-}
-
-func MatrixTransform(m Matrix3x3, t Coord) Matrix4x4 {
-	return Multiply4x4(
-		Matrix4x4{
-			{1, 0, 0, t.x},
-			{0, 1, 0, t.y},
-			{0, 0, 1, t.z},
-			{0, 0, 0, 1},
-		},
-		Matrix4x4{
-			{m[0][0], m[0][1], m[0][2], 0},
-			{m[1][0], m[1][1], m[1][2], 0},
-			{m[2][0], m[2][1], m[2][2], 0},
-			{0, 0, 0, 1},
-		},
-	)
-}
-
 type Matrix3x3 [3][3]int
-type Matrix4x4 [4][4]int
+
+type Transform struct {
+	rotate    Matrix3x3
+	translate Coord
+}
 
 func NewScanner() Scanner {
 	return Scanner{
@@ -193,6 +143,14 @@ func ReadInput(r io.ReadSeeker) Input {
 	return input
 }
 
+func Keys(m map[int]struct{}) string {
+	s := []string{}
+	for k, _ := range m {
+		s = append(s, fmt.Sprintf("%d", k))
+	}
+	return strings.Join(s, ",")
+}
+
 func Normalise(input Input) {
 	normalised := make(map[int]struct{})
 	// first one is normalised against itself already
@@ -204,47 +162,47 @@ func Normalise(input Input) {
 	for len(remaining) > 0 {
 		// for each Scanner
 		// try to normalise against any remaining Scanner
-	outer:
+		found := false
 		for j, _ := range remaining {
 			for i, _ := range normalised {
 				if transform, matched := MatchScanner(input.s[i], input.s[j]); matched {
-					fmt.Println(i, j, transform)
-					if transform[1][3] == 1246 {
-						transform[1][3] = -1246
-					}
+					//fmt.Println(i, "->", j, "T =", transform)
 					normalised[j] = struct{}{}
+					input.s[j].transform = transform
 					NormaliseBeacons(input.s[j].b, transform)
-					fmt.Println("NORMALISED\n", input.s[j].b)
-					input.s[j].Coord = TransformCoord(Coord{}, transform)
-					//fmt.Println(input.s[j].Coord)
 					delete(remaining, j)
-					break outer
+					found = true
+					break
 				}
 			}
+			if found {
+				break
+			}
 		}
-		//fmt.Println(len(remaining), "remaining")
+		if found {
+			//fmt.Println("Normalised", Keys(normalised))
+			fmt.Println("Remaining", Keys(remaining))
+		} else {
+			fmt.Println("Unable to normalise", Keys(remaining))
+			break
+		}
 	}
 }
 
-func NormaliseBeacons(beacons []Beacon, transform Matrix4x4) {
+func NormaliseBeacons(beacons []Beacon, transform Transform) {
 	for i, b := range beacons {
-		beacons[i] = Beacon{TransformCoord(b.Coord, transform)}
+		c := RotateCoord(b.Coord, transform.rotate)
+		c.x += transform.translate.x
+		c.y += transform.translate.y
+		c.z += transform.translate.z
+		beacons[i] = Beacon{c}
 	}
-}
-
-func OutOfRange(a, b Beacon) bool {
-	return (b.x-a.x) > 2000 || (b.y-a.y) > 2000 || (b.z-a.z > 2000) ||
-		(a.x-b.x) > 2000 || (a.y-b.y) > 2000 || (a.z-b.z > 2000)
 }
 
 func MatchingDistances(from, to Scanner) []BeaconPairMatch {
 	result := make([]BeaconPairMatch, 0)
 	for from_dist, from_pair := range from.distances {
 		for to_dist, to_pair := range to.distances {
-			if OutOfRange(from.b[from_pair.b1], to.b[to_pair.b1]) ||
-				OutOfRange(from.b[from_pair.b2], to.b[to_pair.b2]) {
-				continue
-			}
 			if from_dist == to_dist {
 				result = append(result, BeaconPairMatch{from_pair, to_pair})
 			}
@@ -252,13 +210,14 @@ func MatchingDistances(from, to Scanner) []BeaconPairMatch {
 	}
 	return result
 }
-func MatchScanner(from, to Scanner) (Matrix4x4, bool) {
+
+func MatchScanner(from, to Scanner) (Transform, bool) {
 	beaconMatches := MatchingDistances(from, to)
 	if len(beaconMatches) < 12 {
-		return Matrix4x4{}, false
+		return Transform{}, false
 	}
 
-	transforms := make(map[Matrix4x4]int)
+	transforms := make(map[Transform]int)
 
 	for _, bm := range beaconMatches {
 		for _, r := range allRotations {
@@ -267,7 +226,7 @@ func MatchScanner(from, to Scanner) (Matrix4x4, bool) {
 			d1 := DiffVec(from.b[bm.from.b1].Coord, r1)
 			d2 := DiffVec(from.b[bm.from.b2].Coord, r2)
 			if d1 == d2 {
-				tr := MatrixTransform(r, d1)
+				tr := Transform{r, d1}
 				if n, ok := transforms[tr]; ok {
 					transforms[tr] = n + 1
 				} else {
@@ -277,7 +236,7 @@ func MatchScanner(from, to Scanner) (Matrix4x4, bool) {
 		}
 	}
 
-	returnTransform, maxN := Matrix4x4{}, 0
+	returnTransform, maxN := Transform{}, 0
 	for t, n := range transforms {
 		if n > maxN {
 			returnTransform = t
@@ -285,25 +244,10 @@ func MatchScanner(from, to Scanner) (Matrix4x4, bool) {
 		}
 	}
 	if maxN >= 12 {
-		return (returnTransform), true
+		return returnTransform, true
 	}
 
-	return Matrix4x4{}, false
-}
-
-func Transpose(m Matrix4x4) Matrix4x4 {
-	for i := 0; i < 3; i++ {
-		flip := false
-		for j := 0; j < 3; j++ {
-			if m[i][j] == 1 {
-				flip = true
-			}
-		}
-		if flip {
-			m[i][3] = -m[i][3]
-		}
-	}
-	return m
+	return Transform{}, false
 }
 
 // returns a - b
@@ -315,26 +259,48 @@ func DiffVec(a, b Coord) Coord {
 	}
 }
 
-func Part1(r io.ReadSeeker) int {
+func Part1(input Input) int {
 	defer timeTrack(time.Now())
-	input := ReadInput(r)
-	Normalise(input)
 	uniqueBeacons := make(map[Beacon]struct{})
 	for _, s := range input.s {
 		for _, b := range s.b {
 			uniqueBeacons[b] = struct{}{}
 		}
 	}
-
-	for b := range uniqueBeacons {
-		fmt.Println(b)
-	}
 	return len(uniqueBeacons)
 }
 
-func Part2(r io.ReadSeeker) int {
+func Abs(a int) int {
+	if a < 0 {
+		return -a
+	}
+	return a
+}
+
+func Parse(r io.ReadSeeker) Input {
 	defer timeTrack(time.Now())
-	return 0
+	input := ReadInput(r)
+	Normalise(input)
+	return input
+}
+
+func Part2(input Input) int {
+	defer timeTrack(time.Now())
+	max := 0
+	for i, si := range input.s {
+		for j, sj := range input.s {
+			if i == j {
+				continue
+			}
+			d := Abs(si.transform.translate.x-sj.transform.translate.x) +
+				Abs(si.transform.translate.y-sj.transform.translate.y) +
+				Abs(si.transform.translate.z-sj.transform.translate.z)
+			if d > max {
+				max = d
+			}
+		}
+	}
+	return max
 }
 
 func timeTrack(start time.Time) {
@@ -380,15 +346,16 @@ func FileReader(name string) io.ReadSeeker {
 func main() {
 	allRotations = AllRotations()
 
-	expectMatrix3x3(Matrix3x3{{24, 37, 44}, {-6, -11, -32}, {0, -28, 6}},
-		Multiply3x3(Matrix3x3{{6, 1, 0}, {-3, -2, 2}, {3, -1, -4}},
-			Matrix3x3{{4, 5, 6}, {0, 7, 8}, {3, 9, 1}}))
+	expectMatrix3x3(Matrix3x3{{130, 120, 240}, {51, 47, 73}, {35, 33, 45}},
+		Multiply3x3(Matrix3x3{{10, 20, 10}, {4, 5, 6}, {2, 3, 5}},
+			Matrix3x3{{3, 2, 4}, {3, 3, 9}, {4, 4, 2}}))
 
-	test := FileReader("test.txt")
+	test := Parse(FileReader("test.txt"))
 	expect(79, Part1(test), "Part1 - test")
-	expect(0, Part2(test), "Part2 - test")
 
-	input := FileReader("input.txt")
-	//fmt.Println("Part1 - puzzle", Part1(input))
+	input := Parse(FileReader("input.txt"))
+	fmt.Println("Part1 - puzzle", Part1(input))
+
+	expect(3621, Part2(test), "Part2 - test")
 	fmt.Println("Part2 - puzzle", Part2(input))
 }
