@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"strings"
 	"time"
 )
 
@@ -61,15 +60,22 @@ func expectStr(expected string, actual fmt.Stringer) {
 	}
 }
 
-func main() {
-	expect(0, Part1(strings.NewReader("")), "Part1 - test")
-	expect(0, Part2(strings.NewReader("")), "Part2 - test")
-
+func FileReader(name string) io.ReadSeeker {
 	_, mypath, _, _ := runtime.Caller(0)
-	input, err := os.Open(path.Join(path.Dir(mypath), "input.txt"))
+	input, err := os.Open(path.Join(path.Dir(mypath), name))
 	if err != nil {
 		fmt.Println(err)
 	}
+	return input
+}
+
+func main() {
+	test := FileReader("test.txt")
+	expect(0, Part1(test), "Part1 - test")
+
+	input := FileReader("input.txt")
 	fmt.Println("Part1 - puzzle", Part1(input))
+
+	expect(0, Part2(test), "Part2 - test")
 	fmt.Println("Part2 - puzzle", Part2(input))
 }
